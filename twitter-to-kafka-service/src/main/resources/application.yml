@@ -9,3 +9,8 @@ twitter-to-kafka-service:
     - Angular
     - React
   welcome-message: Hola de nuevo
+  enable-v2-tweets: true
+  #?tweet.fields=created_at&expansions=author_id
+  twitter-v2-base-url: https://api.twitter.com/2/tweets/search/stream
+  twitter-v2-rules-base-url: https://api.twitter.com/2/tweets/search/stream/rules
+  twitter-v2-bearer-token: AAAAAAAAAAAAAAAAAAAAAMlGgAEAAAAAFcb49EzFPgzAwu9gUZitkjLy1kk%3DbXMqTNxeCCd1100sVE2ZMSo4rc7lnDqOgIlx6RQ204TGg69c70

@@ -24,6 +24,8 @@
 		<twitter4j-stream.version>4.0.7</twitter4j-stream.version>
 		<lombok.version>1.18.24</lombok.version>
 		<twitter-api-java-sdk.version>1.1.4</twitter-api-java-sdk.version>
+		<httpclient.version>4.5.13</httpclient.version>
+		<json.version>20220320</json.version>
 	</properties>
 
 	<dependencyManagement>
@@ -51,6 +53,18 @@
 				<groupId>com.twitter</groupId>
 				<artifactId>twitter-api-java-sdk</artifactId>
 				<version>${twitter-api-java-sdk.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.json</groupId>
+				<artifactId>json</artifactId>
+				<version>${json.version}</version>
 			</dependency>
 
 			<dependency>
