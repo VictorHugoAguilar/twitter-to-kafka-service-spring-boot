@@ -28,6 +28,7 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import twitter4j.Status;
@@ -36,7 +37,8 @@ import twitter4j.TwitterObjectFactory;
 
 
 @Component
-@ConditionalOnProperty(name = "twitter-to-kafka-service.enable-v2-tweets", havingValue = "true", matchIfMissing = true)
+// @ConditionalOnProperty(name = "twitter-to-kafka-service.enable-v2-tweets", havingValue = "true", matchIfMissing = true)
+@ConditionalOnExpression("${twitter-to-kafka-service.enable-v2-tweets} && not ${twitter-to-kafka-service.enable-mock-tweets}")
 public class TwitterV2StreamHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(TwitterV2StreamHelper.class);
@@ -49,9 +51,9 @@ public class TwitterV2StreamHelper {
 
     private static final String tweetAsRowJson = "{" +
             "\"created_at\":\"{0}\"," +
-            "\"id\":\"{1}\"" +
-            "\"text\":\"{2}\"" +
-            "\"user\":\"{3}\"" +
+            "\"id\":\"{1}\"," +
+            "\"text\":\"{2}\"," +
+            "\"user\": { \"id\":\"{3}\"}" +
             "}";
 
     private static final String TWITTER_STATUS_DATE_FORMAT = "EEE MMM dd HH:mm:ss zzz yyyy";
@@ -85,10 +87,10 @@ public class TwitterV2StreamHelper {
             BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
             String line = reader.readLine();
             while (line != null) {
-                System.out.println(line);
                 line = reader.readLine();
                 if (!line.isEmpty()) {
                     String tweet = getFormattedTweet(line);
+                    LOG.info("tweet {}", tweet);
                     Status status = null;
                     try {
                         status = TwitterObjectFactory.createStatus(tweet);
@@ -194,18 +196,22 @@ public class TwitterV2StreamHelper {
     }
 
     String getFormattedTweet(String data) {
+        LOG.info("data -> {}", data);
         JSONObject jsonData = (JSONObject) new JSONObject(data).get("data");
+        LOG.info("JSON -> {}", jsonData);
         String[] params = new String[]{
                 ZonedDateTime.parse(jsonData.get("created_at").toString()).withZoneSameInstant(ZoneId.of("UTC"))
-                        .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT)),
+                        .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
                 jsonData.get("id").toString(),
-                jsonData.get("text").toString().replace("\"", "\\\\\""),
+                jsonData.get("text").toString().replaceAll("\"", "\\\\\""),
                 jsonData.get("author_id").toString()
         };
         return formatTweetAsJsonWithParams(params);
     }
 
     private String formatTweetAsJsonWithParams(String[] params) {
+        LOG.info("formatTweetAsJsonWithParams length -> {}", params.length);
+
         String tweet = tweetAsRowJson;
         for (int i = 0; i < params.length; i++) {
             tweet = tweet.replace("{" + i + "}", params[i]);
