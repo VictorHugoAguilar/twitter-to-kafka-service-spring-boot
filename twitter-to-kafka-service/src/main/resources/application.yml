@@ -1,0 +1,11 @@
+twitter-to-kafka-service:
+  twitter-keywords:
+    - Java
+    - Microservices
+    - Spring
+    - Kafka
+    - Elasticsearch
+    - Node
+    - Angular
+    - React
+  welcome-message: Hola de nuevo
