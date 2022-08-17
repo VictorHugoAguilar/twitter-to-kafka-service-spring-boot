@@ -20,6 +20,9 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -37,6 +40,10 @@ import twitter4j.TwitterObjectFactory;
 public class TwitterV2StreamHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(TwitterV2StreamHelper.class);
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String CONTENT_TYPE = "content-type";
+    public static final String APPLICATION_JSON = "application/json";
+    public static final String UTF_8 = "UTF-8";
     private final TwitterToKafkaServiceConfigData twitterToKafkaServiceConfigData;
     private final TwitterKafkaStatusListener twitterKafkaStatusListener;
 
@@ -70,7 +77,7 @@ public class TwitterV2StreamHelper {
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2BaseUrl());
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
+        httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", bearerToken));
 
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
@@ -100,7 +107,7 @@ public class TwitterV2StreamHelper {
     /*
      * Helper method to setup rules before streaming data
      * */
-    private static void setupRules(String bearerToken, Map<String, String> rules) throws IOException, URISyntaxException {
+    void setupRules(String bearerToken, Map<String, String> rules) throws IOException, URISyntaxException {
         List<String> existingRules = getRules(bearerToken);
         if (existingRules.size() > 0) {
             deleteRules(bearerToken, existingRules);
@@ -112,7 +119,7 @@ public class TwitterV2StreamHelper {
     /*
      * Helper method to create rules for filtering
      * */
-    private static void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
+    void createRules(String bearerToken, Map<String, String> rules) throws URISyntaxException, IOException {
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build())
@@ -121,36 +128,36 @@ public class TwitterV2StreamHelper {
         URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
 
         HttpPost httpPost = new HttpPost(uriBuilder.build());
-        httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
-        httpPost.setHeader("content-type", "application/json");
+        httpPost.setHeader(AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpPost.setHeader(CONTENT_TYPE, APPLICATION_JSON);
         StringEntity body = new StringEntity(getFormattedString("{\"add\": [%s]}", rules));
         httpPost.setEntity(body);
         HttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
-        if (null != entity) {
-            System.out.println(EntityUtils.toString(entity, "UTF-8"));
+        if (Objects.nonNull(entity)) {
+            LOG.info(EntityUtils.toString(entity, UTF_8));
         }
     }
 
     /*
      * Helper method to get existing rules
      * */
-    private static List<String> getRules(String bearerToken) throws URISyntaxException, IOException {
+    List<String> getRules(String bearerToken) throws URISyntaxException, IOException {
         List<String> rules = new ArrayList<>();
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                 .build();
 
-        URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
+        URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
-        httpGet.setHeader("content-type", "application/json");
+        httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpGet.setHeader(CONTENT_TYPE, APPLICATION_JSON);
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
-        if (null != entity) {
-            JSONObject json = new JSONObject(EntityUtils.toString(entity, "UTF-8"));
+        if (Objects.nonNull(entity)) {
+            JSONObject json = new JSONObject(EntityUtils.toString(entity, UTF_8));
             if (json.length() > 1) {
                 JSONArray array = (JSONArray) json.get("data");
                 for (int i = 0; i < array.length(); i++) {
@@ -166,27 +173,47 @@ public class TwitterV2StreamHelper {
     /*
      * Helper method to delete rules
      * */
-    private static void deleteRules(String bearerToken, List<String> existingRules) throws URISyntaxException, IOException {
+    void deleteRules(String bearerToken, List<String> existingRules) throws URISyntaxException, IOException {
         HttpClient httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build())
                 .build();
 
-        URIBuilder uriBuilder = new URIBuilder("https://api.twitter.com/2/tweets/search/stream/rules");
+        URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
         HttpPost httpPost = new HttpPost(uriBuilder.build());
-        httpPost.setHeader("Authorization", String.format("Bearer %s", bearerToken));
-        httpPost.setHeader("content-type", "application/json");
+        httpPost.setHeader(AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpPost.setHeader(CONTENT_TYPE, APPLICATION_JSON);
         StringEntity body = new StringEntity(getFormattedString("{ \"delete\": { \"ids\": [%s]}}", existingRules));
         httpPost.setEntity(body);
         HttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
-        if (null != entity) {
-            System.out.println(EntityUtils.toString(entity, "UTF-8"));
+        if (Objects.nonNull(entity)) {
+            LOG.info(EntityUtils.toString(entity, UTF_8));
         }
     }
 
-    private static String getFormattedString(String string, List<String> ids) {
+    String getFormattedTweet(String data) {
+        JSONObject jsonData = (JSONObject) new JSONObject(data).get("data");
+        String[] params = new String[]{
+                ZonedDateTime.parse(jsonData.get("created_at").toString()).withZoneSameInstant(ZoneId.of("UTC"))
+                        .format(DateTimeFormatter.ofPattern(TWITTER_STATUS_DATE_FORMAT)),
+                jsonData.get("id").toString(),
+                jsonData.get("text").toString().replace("\"", "\\\\\""),
+                jsonData.get("author_id").toString()
+        };
+        return formatTweetAsJsonWithParams(params);
+    }
+
+    private String formatTweetAsJsonWithParams(String[] params) {
+        String tweet = tweetAsRowJson;
+        for (int i = 0; i < params.length; i++) {
+            tweet = tweet.replace("{" + i + "}", params[i]);
+        }
+        return tweet;
+    }
+
+    String getFormattedString(String string, List<String> ids) {
         StringBuilder sb = new StringBuilder();
         if (ids.size() == 1) {
             return String.format(string, "\"" + ids.get(0) + "\"");
