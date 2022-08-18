@@ -1,7 +1,7 @@
 package com.microservices.twitter.to.kafka.service.runner.impl;
 
 import com.microservices.twitter.to.kafka.service.config.TwitterToKafkaServiceConfigData;
-import com.microservices.twitter.to.kafka.service.constants.TwitterHttpConstants;
+import com.microservices.twitter.to.kafka.service.constants.TwitterToKafkaServicesConstants;
 import com.microservices.twitter.to.kafka.service.listener.TwitterKafkaStatusListener;
 
 import org.apache.http.HttpEntity;
@@ -29,7 +29,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import twitter4j.Status;
 import twitter4j.TwitterException;
@@ -63,7 +62,7 @@ public class TwitterV2StreamHelper {
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2BaseUrl());
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.setHeader(TwitterHttpConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpGet.setHeader(TwitterToKafkaServicesConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
 
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
@@ -114,14 +113,14 @@ public class TwitterV2StreamHelper {
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
         HttpPost httpPost = new HttpPost(uriBuilder.build());
-        httpPost.setHeader(TwitterHttpConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
-        httpPost.setHeader(TwitterHttpConstants.CONTENT_TYPE, TwitterHttpConstants.APPLICATION_JSON);
+        httpPost.setHeader(TwitterToKafkaServicesConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpPost.setHeader(TwitterToKafkaServicesConstants.CONTENT_TYPE, TwitterToKafkaServicesConstants.APPLICATION_JSON);
         StringEntity body = new StringEntity(getFormattedString("{\"add\": [%s]}", rules));
         httpPost.setEntity(body);
         HttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
         if (Objects.nonNull(entity)) {
-            LOG.info(EntityUtils.toString(entity, TwitterHttpConstants.UTF_8));
+            LOG.info(EntityUtils.toString(entity, TwitterToKafkaServicesConstants.UTF_8));
         }
     }
 
@@ -138,12 +137,12 @@ public class TwitterV2StreamHelper {
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
         HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.setHeader(TwitterHttpConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
-        httpGet.setHeader(TwitterHttpConstants.CONTENT_TYPE, TwitterHttpConstants.APPLICATION_JSON);
+        httpGet.setHeader(TwitterToKafkaServicesConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpGet.setHeader(TwitterToKafkaServicesConstants.CONTENT_TYPE, TwitterToKafkaServicesConstants.APPLICATION_JSON);
         HttpResponse response = httpClient.execute(httpGet);
         HttpEntity entity = response.getEntity();
         if (Objects.nonNull(entity)) {
-            JSONObject json = new JSONObject(EntityUtils.toString(entity, TwitterHttpConstants.UTF_8));
+            JSONObject json = new JSONObject(EntityUtils.toString(entity, TwitterToKafkaServicesConstants.UTF_8));
             if (json.length() > 1) {
                 JSONArray array = (JSONArray) json.get("data");
                 for (int i = 0; i < array.length(); i++) {
@@ -167,14 +166,14 @@ public class TwitterV2StreamHelper {
         URIBuilder uriBuilder = new URIBuilder(twitterToKafkaServiceConfigData.getTwitterV2RulesBaseUrl());
 
         HttpPost httpPost = new HttpPost(uriBuilder.build());
-        httpPost.setHeader(TwitterHttpConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
-        httpPost.setHeader(TwitterHttpConstants.CONTENT_TYPE, TwitterHttpConstants.APPLICATION_JSON);
+        httpPost.setHeader(TwitterToKafkaServicesConstants.AUTHORIZATION, String.format("Bearer %s", bearerToken));
+        httpPost.setHeader(TwitterToKafkaServicesConstants.CONTENT_TYPE, TwitterToKafkaServicesConstants.APPLICATION_JSON);
         StringEntity body = new StringEntity(getFormattedString("{ \"delete\": { \"ids\": [%s]}}", existingRules));
         httpPost.setEntity(body);
         HttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
         if (Objects.nonNull(entity)) {
-            LOG.info(EntityUtils.toString(entity, TwitterHttpConstants.UTF_8));
+            LOG.info(EntityUtils.toString(entity, TwitterToKafkaServicesConstants.UTF_8));
         }
     }
 
@@ -182,7 +181,7 @@ public class TwitterV2StreamHelper {
         JSONObject jsonData = (JSONObject) new JSONObject(data).get("data");
         String[] params = new String[]{
                 ZonedDateTime.parse(jsonData.get("created_at").toString()).withZoneSameInstant(ZoneId.of("UTC"))
-                        .format(DateTimeFormatter.ofPattern(TwitterHttpConstants.TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
+                        .format(DateTimeFormatter.ofPattern(TwitterToKafkaServicesConstants.TWITTER_STATUS_DATE_FORMAT, Locale.ENGLISH)),
                 jsonData.get("id").toString(),
                 jsonData.get("text").toString().replaceAll("\"", "\\\\\""),
                 jsonData.get("author_id").toString()
@@ -191,7 +190,7 @@ public class TwitterV2StreamHelper {
     }
 
     private String formatTweetAsJsonWithParams(String[] params) {
-        String tweet = TwitterHttpConstants.tweetAsRowJson;
+        String tweet = TwitterToKafkaServicesConstants.tweetAsRowJson;
         for (int i = 0; i < params.length; i++) {
             tweet = tweet.replace("{" + i + "}", params[i]);
         }

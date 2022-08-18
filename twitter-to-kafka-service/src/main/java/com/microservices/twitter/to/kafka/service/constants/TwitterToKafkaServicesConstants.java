@@ -1,6 +1,6 @@
 package com.microservices.twitter.to.kafka.service.constants;
 
-public class TwitterHttpConstants {
+public class TwitterToKafkaServicesConstants {
 
     public static final String AUTHORIZATION = "Authorization";
     public static final String CONTENT_TYPE = "content-type";
