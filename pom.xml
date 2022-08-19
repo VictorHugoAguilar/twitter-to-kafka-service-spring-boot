@@ -4,7 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<modules>
 		<module>twitter-to-kafka-service</module>
-	</modules>
+        <module>app-config-data</module>
+        <module>kafka</module>
+    </modules>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -30,6 +32,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- LOCAL	-->
+			<dependency>
+				<groupId>com.microservices.twitter</groupId>
+				<artifactId>app-config-data</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter</artifactId>
