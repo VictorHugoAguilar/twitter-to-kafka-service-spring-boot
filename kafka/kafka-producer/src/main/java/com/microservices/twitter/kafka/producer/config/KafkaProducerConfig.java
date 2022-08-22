@@ -4,8 +4,11 @@ import com.microservices.twitter.to.kafka.service.config.KafkaConfigData;
 import com.microservices.twitter.to.kafka.service.config.KafkaProducerConfigData;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -15,18 +18,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaProducerConfig < K extends Serializable, V extends SpecificRecordBase> {
-
+public class KafkaProducerConfig<K extends Serializable, V extends SpecificRecordBase> {
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaProducerConfig.class);
     private final KafkaConfigData kafkaConfigData;
     private final KafkaProducerConfigData kafkaProducerConfigData;
 
-    public KafkaProducerConfig(KafkaConfigData kafkaConfigData, KafkaProducerConfigData kafkaProducerConfigData) {
-        this.kafkaConfigData = kafkaConfigData;
-        this.kafkaProducerConfigData = kafkaProducerConfigData;
+    public KafkaProducerConfig(KafkaConfigData configData, KafkaProducerConfigData producerConfigData) {
+        this.kafkaConfigData = configData;
+        this.kafkaProducerConfigData = producerConfigData;
     }
 
     @Bean
-    public Map<String, Object> producerConfig(){
+    public Map<String, Object> producerConfig() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfigData.getBootstrapServers());
         props.put(kafkaConfigData.getSchemaRegistryUrlKey(), kafkaConfigData.getSchemaRegistryUrl());
@@ -42,12 +45,12 @@ public class KafkaProducerConfig < K extends Serializable, V extends SpecificRec
     }
 
     @Bean
-    public ProducerFactory<K,V> producerFactory(){
+    public ProducerFactory<K, V> producerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
     @Bean
-    public KafkaTemplate<K, V> kafkaTemplate(){
+    public KafkaTemplate<K, V> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

@@ -9,8 +9,8 @@ import org.springframework.retry.annotation.EnableRetry;
 
 import java.util.Map;
 
-@Configuration
 @EnableRetry
+@Configuration
 public class KafkaAdminConfig {
 
     private final KafkaConfigData kafkaConfigData;

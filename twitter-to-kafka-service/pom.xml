@@ -13,11 +13,23 @@
 
     <dependencies>
 
+        <!-- LOCAL -->
         <dependency>
             <groupId>com.microservices.twitter</groupId>
             <artifactId>app-config-data</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.microservices.twitter</groupId>
+            <artifactId>kafka-admin</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.microservices.twitter</groupId>
+            <artifactId>kafka-producer</artifactId>
+        </dependency>
+
+        <!--  SPRING DEPENDENCIES -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
