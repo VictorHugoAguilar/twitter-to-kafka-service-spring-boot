@@ -160,6 +160,12 @@
                 <version>${kafka-avro-serializer.verion}</version>
             </dependency>
 
+            <!-- https://mvnrepository.com/artifact/io.netty/netty-resolver-dns-native-macos -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-resolver-dns-native-macos</artifactId>
+                <version>4.1.79.Final</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

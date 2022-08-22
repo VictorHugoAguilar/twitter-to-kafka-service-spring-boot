@@ -3,11 +3,13 @@ spring.profiles.active: dev
 
 twitter-to-kafka-service:
   twitter-keywords:
-    - Java
-    - Microservices
-    - SpringBoot
-    - Kafka
-    - Elasticsearch
+    - Ukraine
+    - Ucrania
+    #- Java
+    #- Microservices
+    #- SpringBoot
+    #- Kafka
+    #- Elasticsearch
   welcome-message: initializing application ....
   enable-v2-tweets: true
   enable-mock-tweets: true
