@@ -100,7 +100,7 @@ services:
     ports:
       - "9021:9021"
     environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka-broker-1:19092,kafka-broker-2:29092,kafka-broker-3:39092'
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: zookeeper:2181
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONTROL_CENTER_REPLICATION_FACTOR: 1
@@ -108,3 +108,5 @@ services:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
+    #networks:
+    #  - ${GLOBAL_NETWORK:-kafka}
